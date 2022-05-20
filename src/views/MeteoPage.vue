@@ -2,15 +2,17 @@
 
 <script setup lang="ts">
     // Importation des modules
-    import { IonSplitPane,IonPage, IonContent,IonFooter,IonList,IonListHeader,IonItem,IonText,IonLabel, IonTitle,IonToolbar,IonHeader,IonSelect,IonSelectOption,IonLoading, SelectChangeEventDetail} from "@ionic/vue";
+    import { IonSplitPane,IonPage, IonContent,IonFooter,IonList,IonListHeader,IonItem,IonText,IonLabel, IonTitle,IonToolbar,IonHeader,IonSelect,IonSelectOption,IonLoading} from "@ionic/vue";
+    import { SelectCustomEvent } from "@ionic/core";
+    
     import {Geolocation} from "@capacitor/geolocation";
     
     import { inject, Ref, ref, watchEffect } from "vue";
     
     import { MeteoServiceKey } from "@/injection";
-    import { Geocoding, MeteoData } from "@/interface_type/openWeather";
+    import { MeteoData } from "@/interface_type/openWeather";
     
-    import jsonLocationOption from "./location.json";
+    
 
     // Injection des services
     const MeteoS = inject(MeteoServiceKey)
@@ -39,16 +41,14 @@
             }
         ];
     
-    // Déclaration des variables
-    var currentPosition:Geocoding|null = null;
-    // const locationSelection = json_locationSelection
+        
     // Déclaration des variables reactive
     const isLoading = ref(true);
 
     const location:Ref<string|null> = ref(locationOptions[0].value);
     const locationMeteoData:Ref<MeteoData|null> = ref(null);
 
-    function locationChange(event:CustomEvent<SelectChangeEventDetail>){
+    function locationChange(event:SelectCustomEvent<string>){
         location.value = event.detail.value;
     }
 
@@ -90,7 +90,7 @@
                     <ion-list-header class="date">
                         {{(new Date).toLocaleDateString('fr-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}}
                     </ion-list-header>
-                    <ion-item color="secondary">
+                    <ion-item color="medium">
                         <ion-label>Ville</ion-label>
                         <ion-select :value="location" @ionChange="locationChange" >
 
