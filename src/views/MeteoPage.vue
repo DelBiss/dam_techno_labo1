@@ -1,67 +1,69 @@
 
 
 <script setup lang="ts">
-    import { IonSplitPane,IonPage, IonContent,IonFooter,IonList,IonItem,IonLabel, IonTitle,IonToolbar,IonHeader,IonSelect,IonSelectOption,IonLoading} from "@ionic/vue";
+    // Importation des modules
+    import { IonSplitPane,IonPage, IonContent,IonFooter,IonList,IonListHeader,IonItem,IonText,IonLabel, IonTitle,IonToolbar,IonHeader,IonSelect,IonSelectOption,IonLoading, SelectChangeEventDetail} from "@ionic/vue";
     import {Geolocation} from "@capacitor/geolocation";
     
-    import { useRoute } from "vue-router";
     import { inject, Ref, ref, watchEffect } from "vue";
     
     import { MeteoServiceKey } from "@/injection";
     import { Geocoding, MeteoData } from "@/interface_type/openWeather";
     
-    const route = useRoute();
-    const { location } = route.params;
-    const title = ref(typeof location === "string" ? location : location[0]);
-    const city:Ref<string|null> = ref(null);
-    var currentPosition:Geocoding|null = null;
+    import jsonLocationOption from "./location.json";
+
+    // Injection des services
     const MeteoS = inject(MeteoServiceKey)
-    const Meteodata:Ref<MeteoData|null> = ref(null);
-
-    const selectLocation= [
-        {
-            name: "Position Actuelle",
-            city: null,
-        },
-        {
-            name: "Montreal",
-            city: "Montreal"
-        },
-        {
-            name: "Laval",
-            city: "Laval"
-        },
-        {
-            name: "Quebec",
-            city: "Quebec"
-        }
-        ];
-
-    const loading = ref(false);
-
-    function cityChange(event: { target: { value: any; }; }){
-        if (event) {
-            city.value = event.target.value;
-        }
+    
+    // Data
+    interface ILocationSelection {
+        label : string,
+        value: string|null
     }
+    const locationOptions:ILocationSelection[] = [
+            {
+                "label": "Montreal",
+                "value": "Montreal"
+            },
+            {
+                "label": "Laval",
+                "value": "Laval"
+            },
+            {
+                "label": "Quebec",
+                "value": "Quebec"
+            },
+            {
+                "label": "Position Actuelle",
+                "value": null
+            }
+        ];
+    
+    // Déclaration des variables
+    var currentPosition:Geocoding|null = null;
+    // const locationSelection = json_locationSelection
+    // Déclaration des variables reactive
+    const isLoading = ref(true);
+
+    const location:Ref<string|null> = ref(locationOptions[0].value);
+    const locationMeteoData:Ref<MeteoData|null> = ref(null);
+
+    function locationChange(event:CustomEvent<SelectChangeEventDetail>){
+        location.value = event.detail.value;
+    }
+
     watchEffect(async () => {
-        console.log("loading");
+        
         if(MeteoS){
-            loading.value = true;
-            if(city.value){
-                Meteodata.value = await MeteoS.getWeatherByCity(city.value);
+            isLoading.value = true;
+            if(location.value){
+                locationMeteoData.value = await MeteoS.getWeatherByLocation(location.value);
                 
             }else{
-                const coordinate = await Geolocation.getCurrentPosition();
-                currentPosition = await MeteoS.reverseGeoCode(
-                    coordinate.coords.latitude,
-                    coordinate.coords.longitude
-                );
-                console.log(currentPosition);
-                Meteodata.value = await MeteoS.getWeatherByPosition(currentPosition.lat,currentPosition.lon,currentPosition);
+                const coordinate = await Geolocation.getCurrentPosition({maximumAge:2*60*1000});
+                locationMeteoData.value = await MeteoS.getWeatherByPosition(coordinate.coords);
             }
-            console.log(Meteodata.value);
-            loading.value = false;
+            isLoading.value = false;
         }
     });    
 </script>
@@ -73,7 +75,7 @@
 
         <div class="ion-page" id="main-content">
             <ion-header>
-                <ion-toolbar>
+                <ion-toolbar color="primary">
                     <ion-title>
                         Ma météo
                     </ion-title>
@@ -81,35 +83,43 @@
             </ion-header>
             <ion-content>
                 <ion-loading
-                    :is-open="loading"
+                    :is-open="isLoading"
                     message="Please wait..."
                 />
-                    <div class="date ion-padding">
-                        {{(new Date).toLocaleDateString('fr-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}}
-                    </div>
                 <ion-list>
-                    <ion-item>
+                    <ion-list-header class="date">
+                        {{(new Date).toLocaleDateString('fr-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}}
+                    </ion-list-header>
+                    <ion-item color="secondary">
                         <ion-label>Ville</ion-label>
-                        <ion-select :value="city" @ionChange="cityChange">
-                            <ion-select-option v-for="aLocation in selectLocation" :key="aLocation.name" :value="aLocation.city">{{aLocation.name}}</ion-select-option>                            
+                        <ion-select :value="location" @ionChange="locationChange" >
+
+                            <ion-select-option v-for="locationOption in locationOptions" :key="locationOption.label" :value="locationOption.value">
+                                {{locationOption.label}}
+                            </ion-select-option>                            
+                        
                         </ion-select>
                     </ion-item>
                 </ion-list>
-                <div class="ion-padding condition" v-if="Meteodata">
+
+                <!-- Only show if we have some MeteoData -->
+                <div class="ion-padding condition" v-if="locationMeteoData">
                     <div class="city">
-                        {{Meteodata.geocoding.local_names['fr'] ? Meteodata?.geocoding.local_names['fr'] : Meteodata?.geocoding.name}}
+                        {{locationMeteoData.geocoding.local_names['fr'] ? locationMeteoData?.geocoding.local_names['fr'] : locationMeteoData?.geocoding.name}}
                     </div>
                     <div class="temperature">
-                        {{Meteodata?.current.temp}}°C
+                        {{locationMeteoData?.current.temp}}°C
                     </div>
-                        <img :src="'http://openweathermap.org/img/wn/'+Meteodata?.current.weather[0].icon+'@2x.png'" />
+                        <img :src="'http://openweathermap.org/img/wn/'+locationMeteoData?.current.weather[0].icon+'@2x.png'" />
                     <div class="description">
-                        {{Meteodata?.current.weather[0].description}}
+                        {{locationMeteoData?.current.weather[0].description}}
                     </div>
                 </div>
             </ion-content>
-            <ion-footer>
-                <div class="foot ion-padding">©️ Philippe Allard-Rousse</div>
+            <ion-footer >
+                <ion-toolbar color="primary">
+                    <ion-text class="ion-padding">©️ Philippe Allard-Rousse</ion-text>
+                </ion-toolbar>
                 </ion-footer>
         </div>
     </ion-split-pane>

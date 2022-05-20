@@ -5,16 +5,8 @@ import { RouteRecordRaw } from 'vue-router';
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/meteo/current'
-  },
-  {
-    path: '/meteo',
-    redirect: '/meteo/current'
-  },
-  {
-    path: '/meteo/:location',
     component: () => import('@/views/MeteoPage.vue')
-  }
+  }  
 ]
 
 const router = createRouter({

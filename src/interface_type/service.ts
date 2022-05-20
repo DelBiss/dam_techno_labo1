@@ -1,7 +1,13 @@
+import { Position } from "@capacitor/geolocation";
 import { Geocoding, MeteoData } from "./openWeather";
 
+export type ParamsWeatherPosition = Pick<Position["coords"], "latitude" | "longitude">;
+
 export interface MeteoService {
-    getWeatherByPosition(lat: number, lon: number, geo?:Geocoding): Promise<MeteoData>;
-    getWeatherByCity(city: string): Promise<MeteoData>;
-    reverseGeoCode(lat: number, lon: number): Promise<Geocoding>;
+    getWeatherByPosition(position: ParamsWeatherPosition): Promise<MeteoData>;
+    getWeatherByGeocoding(geocode:Geocoding): Promise<MeteoData>;
+    getWeatherByLocation(location: string): Promise<MeteoData>;
+    
+    geoCode(location:string): Promise<Geocoding>;
+    reverseGeoCode(position:ParamsWeatherPosition): Promise<Geocoding>;
 }

@@ -30,6 +30,7 @@ const app = createApp(App)
   .use(router);
 
 app.provide(MeteoServiceKey, new OpenWeatherMap());
+
 router.isReady().then(() => {
   app.mount('#app');
 });
