@@ -1,8 +1,7 @@
 <template>
   <div id="container">
-    <strong>{{name  }}</strong>
-    <p>Explore <a target="_blank" rel="noopener noreferrer" router-link="/tabs/tab1" routerDirection="forward" >UI Components</a></p>
-    
+    <strong>{{ name }}</strong>
+    <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
   </div>
 </template>
 
@@ -10,9 +9,9 @@
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-  name: 'ExploreContainer',
+  name: 'MeteoCard',
   props: {
-    name:Array
+    name: String
   }
 });
 </script>

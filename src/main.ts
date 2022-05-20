@@ -22,11 +22,14 @@ import '@ionic/vue/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import { MeteoServiceKey } from './injection';
+import { OpenWeatherMap } from './service/service_meteo';
 
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
-  
+
+app.provide(MeteoServiceKey, new OpenWeatherMap());
 router.isReady().then(() => {
   app.mount('#app');
 });
